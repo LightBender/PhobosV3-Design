@@ -27,7 +27,106 @@ Therefore, v2 will continue to be supported. A user must be able to mix and matc
 
 ### Phobos v3
 
-#### Will use a different package prefix for it, `std3`, thus avoiding any name conflicts with v2
+#### Existing Phobos V2 roots remain reserved indefinitely
+
+The existing roots of `core` for the Runtime, `etc` for C Interfaces, and `std` for the V2 Standard Library are to remain reserved for the foreseeable future. Both V2 and V3 will share usage of the `core` and `etc` roots. The `std` root is to be maintained for compatibility but no new features will be added.
+
+#### Use multiple package prefixes/roots
+
+Phobos V3 will use multiple package roots. This allows us to keep the old `std` package root while splitting up the new library into smaller, more manageable, components. Splitting the library into multiple roots provides the following benefits:
+
+1. Only pay for what you use. Different roots can be compiled as separate static/shared libraries and linked as needed, reducing the overall weight of executables. This offers some relief to the long standing community request to break Phobos into individual packages. While we do not agree with atomizing Phobos to the extreme degree of one package per module, multiple package roots allow us to achieve some of that goal in a logical manner.
+2. Multiple roots allow for layering components. The core roots form a foundation upon which to build higher-level packages.
+3. Multiple roots allow for an expanded feature set without adding to package depth.
+4. Not all roots need to be implemented for a given platform to be considered "supported". If only the core roots are required for a platform to be considered supported it becomes significantly less complicated to port D to new platforms.
+5. Rules can be applied differently to core vs. non-core roots. For example, a possible rule could be that core roots may not throw exceptions under any circumstance, but non-core roots can. This is not intended to imply that throwing exceptions is encouraged, merely made available to allow more implementation flexibility for more complex constructs.
+6. The old `std` root can continue to be maintained and built independently of the new Phobos roots.
+
+Currently the core roots for Phobos V3 are `core`, `etc`, and `sys`. As a rule, Core roots *MUST NOT* import from non-core roots.
+
+Proposed Package Structure (Existing Modules Only):
+```
+core.*
+etc.*
+std.*
+sys
+| algorithm
+  | comparison
+  | iteration
+  | mutation
+  | searching
+  | setops
+  | sorting
+| array
+| bigint
+| bitmanip
+| checkedint
+| compiler
+| complex
+| conv
+| datetime
+  | date
+  | interval
+  | stopwatch
+  | systime
+  | timezone
+| demangle
+| exception
+| functional
+| getopt
+| int128
+| io (stdio)
+  | file
+  | mmfile
+  | path
+| math
+  | algebraic
+  | constants
+  | exponential
+  | hardware
+  | operations
+  | remainder
+  | rounding
+  | traits
+  | trigonometry
+  | special
+| meta
+| numeric
+| outbuffer
+| process
+| random
+| range
+| signals
+| stdint
+| string
+| sumtype
+| system
+| traits
+| typecons
+| uuid
+| variant
+data 
+| base64
+| csv
+| json
+| zip
+text
+| ascii
+| encoding
+| uni
+| utf
+net
+| socket
+| uri
+```
+
+**Open Questions**
+
+1. `std.container`: Does it belong in `sys` or it's own root? I suspect this answer hinges on what rules are applied to it.
+2. `std.concurrency`: Not all platforms support Concurrency mechanics. Should `std.concurrency` be required in the core roots or moved to a non-core root?
+3. `std.parallelism`: Not all platforms support Task Parallelism mechanics. Should `std.parallelism` be required in the core roots or moved to a non-core root?
+4. `std.digest`: Cryptography routines have unique requirements that would be best served by providing them in their own root. But in all cases providing bespoke implementations of cryptography routines is never recommended. Third-party trusted implementations should be used instead. This could be from OpenSSL/LibreSSL (POSIX), SChannel/BCrypt (Windows), or CryptoKit (MacOS/IOS). It is acceptable to provide implementations of Non-Cryptographic routines such as CRC and Murmur. This would entail removing all the digests except CRC and Murmur from this package and building a separate cryptography package.
+5. Which, if any, modules should be removed? This could be either a permanent removal or pending replacement with ground-up rewrites.
 
 ## Overarching Technical Goals
 
