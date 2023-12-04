@@ -66,6 +66,10 @@ Investigate the use of Option types for error returns.
 
 By making the library header only, it becomes inured against variations in compiler flags. Whether it's a static or dynamic library becomes irrelevant, and there won't be impedance mismatches.
 
+### DUB Only Builds
+
+The current Phobos build process is convoluted and relies on old or niche tools. This makes the process of building Phobos tedious and discourages active community participation. DUB will be the only tool needed to build and test Phobos V3. Building and testing Phobos V3 should be as simple as issuing a `dub test` command.
+
 ## Specific Issues
 
 ### std.stdio
